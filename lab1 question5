@@ -1,0 +1,127 @@
+// Open or create the IndexedDB database
+const dbName = "AgricultureDB";
+const dbVersion = 1;
+let db;
+
+const request = indexedDB.open(dbName, dbVersion);
+
+request.onerror = (event) => {
+    console.error("Database error: " + event.target.error);
+};
+
+request.onsuccess = (event) => {
+    db = event.target.result;
+    console.log("Database opened successfully");
+};
+
+request.onupgradeneeded = (event) => {
+    db = event.target.result;
+    
+    // Create object stores for different types of agricultural data
+    const fieldStore = db.createObjectStore("Fields", { keyPath: "id", autoIncrement: true });
+    const cropStore = db.createObjectStore("Crops", { keyPath: "id", autoIncrement: true });
+    const sensorStore = db.createObjectStore("SensorData", { keyPath: "id", autoIncrement: true });
+    
+    // Create indexes for quick lookups
+    fieldStore.createIndex("name", "name", { unique: false });
+    cropStore.createIndex("type", "type", { unique: false });
+    sensorStore.createIndex("fieldId", "fieldId", { unique: false });
+    
+    console.log("Object stores created");
+};
+
+// Function to add field data
+function addField(fieldData) {
+    const transaction = db.transaction(["Fields"], "readwrite");
+    const store = transaction.objectStore("Fields");
+    const request = store.add(fieldData);
+    
+    request.onerror = (event) => {
+        console.error("Error adding field data: " + event.target.error);
+    };
+    
+    request.onsuccess = (event) => {
+        console.log("Field data added successfully");
+    };
+}
+
+// Function to add crop data
+function addCrop(cropData) {
+    const transaction = db.transaction(["Crops"], "readwrite");
+    const store = transaction.objectStore("Crops");
+    const request = store.add(cropData);
+    
+    request.onerror = (event) => {
+        console.error("Error adding crop data: " + event.target.error);
+    };
+    
+    request.onsuccess = (event) => {
+        console.log("Crop data added successfully");
+    };
+}
+
+// Function to add sensor data
+function addSensorData(sensorData) {
+    const transaction = db.transaction(["SensorData"], "readwrite");
+    const store = transaction.objectStore("SensorData");
+    const request = store.add(sensorData);
+    
+    request.onerror = (event) => {
+        console.error("Error adding sensor data: " + event.target.error);
+    };
+    
+    request.onsuccess = (event) => {
+        console.log("Sensor data added successfully");
+    };
+}
+
+// Function to retrieve field data
+function getFieldData(fieldId) {
+    const transaction = db.transaction(["Fields"], "readonly");
+    const store = transaction.objectStore("Fields");
+    const request = store.get(fieldId);
+    
+    request.onerror = (event) => {
+        console.error("Error retrieving field data: " + event.target.error);
+    };
+    
+    request.onsuccess = (event) => {
+        const fieldData = event.target.result;
+        console.log("Field data:", fieldData);
+    };
+}
+
+// Example usage
+const fieldData = {
+    name: "North Field",
+    area: 100,
+    soilType: "Loam",
+    gpsCoordinates: { latitude: 37.7749, longitude: -122.4194 }
+};
+
+const cropData = {
+    type: "Corn",
+    plantingDate: new Date("2024-04-15"),
+    expectedHarvestDate: new Date("2024-09-30")
+};
+
+const sensorData = {
+    fieldId: 1,
+    timestamp: new Date(),
+    temperature: 25.5,
+    humidity: 60,
+    soilMoisture: 35
+};
+
+// Add data once the database is ready
+request.onsuccess = (event) => {
+    db = event.target.result;
+    console.log("Database opened successfully");
+    
+    addField(fieldData);
+    addCrop(cropData);
+    addSensorData(sensorData);
+    
+    // Retrieve field data after a short delay to ensure it's been added
+    setTimeout(() => getFieldData(1), 1000);
+};
